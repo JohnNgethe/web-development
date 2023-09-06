@@ -45,7 +45,7 @@ example:
 Fruit.insertMany([Pineapple,Mango, Grapes]).then(()=>{
      console.log("Success");
  }).catch((err)=>{
-     console.log(err)
+     console.log(err);
  });
 
  7. To close connection in our terminal we add mongoose.connection.close() in our .then(), example below where we are searching for the name of our fruits and displaying the name only. i have used for each instead of a for loop because its much cleaner
@@ -59,3 +59,53 @@ Fruit.insertMany([Pineapple,Mango, Grapes]).then(()=>{
 }).catch((err)=>{
     console.log(err)
 });
+
+8. Mongoose adds validation for our data,
+example:
+const fruitSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required:[true, "No fruit added"]
+  },
+  rating: {
+    type: Number,
+    min: 1,
+    max: 10,
+  },
+  review: String,
+});
+
+const Fruit = mongoose.model("Fruit", fruitSchema);
+
+const DragonFruit = new Fruit({
+
+    rating:4,
+    review:"awesome"
+});
+
+
+In the above schema, the validation occurs in the name and ratings. In our document "DragonFruit, a validation error will occur since we did the name is empty or rather doesnt exist, this keeps our db clean
+
+9. To update and delete records, we use the (.then().catch()) since the model.updateOne, model.deleteOne() does not support function call backs.
+Example:
+Update documents: we provide the target identifier inside {} where it can be id, name or any unique field. 
+
+Fruit.updateOne({ _id: "64f79dc2c7d9ed45390984c3"}, {rating:10})
+.then(()=>{
+    console.log("Update Successful");
+    mongoose.connection.close();
+})
+.catch((err)=>{
+    console.log(err);
+});
+
+Similar to update
+
+Fruit.deleteOne({ _id: "64f79dc2c7d9ed45390984c3" })
+  .then(() => {
+    console.log("Delete Successful");
+    mongoose.connection.close();
+  })
+  .catch((err) => {
+    console.log(err);
+  });
