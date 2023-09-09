@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
-mongoose.connect("mongodb://127.0.0.1:27017/fruitsDB", {useNewUrlParser: true});
+import { connect, Schema, model, connection } from "mongoose";
+connect("mongodb://127.0.0.1:27017/fruitsDB", {useNewUrlParser: true});
 
-const fruitSchema = new mongoose.Schema({
+const fruitSchema = new Schema({
   name: {
     type: String,
     required:[true, "No fruit added"]
@@ -14,7 +14,7 @@ const fruitSchema = new mongoose.Schema({
   review: String,
 });
 
-const Fruit = mongoose.model("Fruit", fruitSchema);
+const Fruit = model("Fruit", fruitSchema);
 
 // const DragonFruit = new Fruit({
 
@@ -42,14 +42,14 @@ const Grapes = new Fruit({
 });
 //Grapes.save();
 
-const personSchema = new mongoose.Schema({
+const personSchema = new Schema({
   name: String,
   age: Number,
   favouriteFruit: fruitSchema
 });
 
 
-const Person = mongoose.model("Person", personSchema);
+const Person = model("Person", personSchema);
 const Mary = new Person({
   name: "Mary",
   age: 25,
@@ -76,7 +76,7 @@ Fruit.find().then((fruits)=>{
     
     fruits.forEach((fruit)=>{
          console.log(fruit.name);
-         mongoose.connection.close();
+         connection.close();
     });   
 }).catch((err)=>{
     console.log(err)
