@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 //const date = require(__dirname + "/date.js");
 const mongoose = require("mongoose");
+const { name } = require("ejs");
 
 const app = express();
 
@@ -41,17 +42,18 @@ app.get("/", (req, res) =>
     //const day = date.getDate();  
     Item.find().then((foundItems)=>{
         if (foundItems.length === 0) {
-            Item.insertMany(defaultItems)
-              .then(() => {
+            Item.insertMany(defaultItems).then(() => {
                 console.log("Successfully added Default Items");
-              })
+                res.redirect("/");
+                })
               .catch((err) => {
                 console.log(err);
               });
 
-        } 
-        res.render("list", { listTitle: "Today", newListItems: foundItems});
+        } else {
+            res.render("list", { listTitle: "Today", newListItems: foundItems});
 
+        }
     }).catch((err)=>{ 
         console.log(err);
     });
@@ -60,22 +62,23 @@ app.get("/", (req, res) =>
  
 app.post("/", (req,res) => {
 
-    const item = req.body.newItem;
-
-    if (req.body.list === "Work"){
-        workItems.push(item);
-        res.redirect("/work");
-    }
-    
-    else{
-        items.push(item);
+    const itemName = req.body.newItem;
+    const item = new Item({
+      name: itemName
+    });
+    item.save();
     res.redirect("/");
-
-    }
-
-    
-    
 })
+
+app.post("/delete", (req,res)=>{
+    const checkedItemId =req.body.checkbox;
+    Item.findByIdAndDelete(checkedItemId).then((checkedItemId)=>{
+        console.log("Deleted :" + checkedItemId + " Successfully");
+    }).catch((err)=>{
+        console.log(err);
+    });
+    res.redirect("/");
+});
 
 app.get("/work", (req,res)=>{
     res.render("list",
