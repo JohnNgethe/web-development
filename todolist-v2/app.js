@@ -96,16 +96,35 @@ app.get("/:customListName", async (req, res) => {
   }
 });
 
- 
-app.post("/", (req,res) => {
 
-    const itemName = req.body.newItem;
-    const item = new Item({
-      name: itemName
-    });
-    item.save();
+app.post("/", async (req, res) => {
+  const itemName = req.body.newItem;
+  const listName = req.body.list;
+  const item = new Item({
+    name: itemName,
+  });
+
+  if (listName === "Today") {
+    await item.save();
     res.redirect("/");
-})
+  } else {
+    try {
+      const foundList = await List.findOne({ name: listName });
+      if (foundList) {
+        foundList.items.push(item);
+        await foundList.save();
+        res.redirect("/" + listName);
+      } else {
+        console.log("List not found!");
+        // Handle the case where the list doesn't exist
+      }
+    } catch (err) {
+      console.error(err);
+      // Handle any errors that occur during database operations
+    }
+  }
+});
+
 
 app.post("/delete", (req,res)=>{
     const checkedItemId =req.body.checkbox;
