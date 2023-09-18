@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 //const date = require(__dirname + "/date.js");
 const mongoose = require("mongoose");
 const { name } = require("ejs");
+const _ = require("lodash");
 
 const app = express();
 
@@ -88,7 +89,8 @@ app.get("/:customListName", async (req, res) => {
       await list.save();
       res.redirect("/" + customListName);
     } else {
-      console.log("Found The list");
+      //List exists 
+      //console.log("Found The list");
       res.render("list", {listTitle: foundList.name, newListItems:foundList.items});
     }
   } catch (err) {
@@ -124,17 +126,39 @@ app.post("/", async (req, res) => {
     }
   }
 });
+app.post("/delete", async (req, res) => {
+  const checkedItemId = req.body.checkbox;
+  const listName = req.body.listName;
 
-
-app.post("/delete", (req,res)=>{
-    const checkedItemId =req.body.checkbox;
-    Item.findByIdAndDelete(checkedItemId).then((checkedItemId)=>{
-        console.log("Deleted :" + checkedItemId + " Successfully");
-    }).catch((err)=>{
-        console.log(err);
-    });
-    res.redirect("/");
+  if (listName === "Today") {
+    try {
+      await Item.findByIdAndDelete(checkedItemId);
+      console.log("Deleted item with ID " + checkedItemId + " successfully");
+      res.redirect("/");
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("An error occurred while deleting the item.");
+    }
+  } else {
+    try {
+      const foundList = await List.findOneAndUpdate(
+        { name: listName },
+        { $pull: { items: { _id: checkedItemId } } }
+      );
+      if (foundList) {
+        console.log("Deleted item with id: " + checkedItemId);
+        res.redirect("/" + listName);
+      } else {
+        console.error("List not found");
+        res.status(404).send("List not found.");
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("An error occurred while updating the list.");
+    }
+  }
 });
+
 
 app.post("/work", (req,res)=>{
     const item = req.body.newItem;

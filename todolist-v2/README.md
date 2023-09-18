@@ -214,3 +214,104 @@ Here's what this code does:
 6. If the list with the name `listName` is not found, it logs "List not found!" and doesn't perform any database operations. You can customize this part to handle the case where the list doesn't exist.
 
 7. The code is wrapped in a `try...catch` block to handle any potential errors that might occur during database operations. If an error occurs, it's logged using `console.error(err)`, and you can add additional error handling logic as needed.
+
+8. Delete items on array of custom link
+Since the `List.findByIdAndUpdate` method doesn't support promises directly, you can use the `async/await` syntax to make it work. Here's the modified code:
+
+```javascript
+app.post("/delete", async (req, res) => {
+  const checkedItemId = req.body.checkbox;
+  const listName = req.body.listName;
+
+  if (listName === "Today") {
+    try {
+      await Item.findByIdAndDelete(checkedItemId);
+      console.log("Deleted item with ID " + checkedItemId + " successfully");
+      res.redirect("/");
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("An error occurred while deleting the item.");
+    }
+  } else {
+    try {
+      const foundList = await List.findOneAndUpdate(
+        { name: listName },
+        { $pull: { items: { _id: checkedItemId } } }
+      );
+      if (foundList) {
+        res.redirect("/" + listName);
+      } else {
+        console.error("List not found");
+        res.status(404).send("List not found.");
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("An error occurred while updating the list.");
+    }
+  }
+});
+```
+
+In this code:
+
+1. We wrap the route handler function with `async` to allow the use of `await` for asynchronous operations.
+
+2. We use `try...catch` blocks to handle errors gracefully and send appropriate responses with status codes.
+
+3. For the "Today" list case, we use `await` with `Item.findByIdAndDelete` to delete the item and then redirect to the home page.
+
+4. For other lists, we use `await` with `List.findOneAndUpdate` to update the list by removing the specified item and then redirect to the corresponding list page. We also check if the list exists and handle that case accordingly.
+
+This code should work as expected and handle errors properly.
+The `$pull` operator in MongoDB is used to remove elements from an array within a document that match certain criteria. It is typically used in conjunction with the `update` or `findOneAndUpdate` methods to modify documents in a collection.
+
+Here's an in-depth explanation of how `$pull` works:
+
+1. **Syntax**:
+   The basic syntax of `$pull` is as follows:
+
+   ```javascript
+   { $pull: { field: <value-to-remove> } }
+   ```
+
+   - `$pull` is the operator that indicates the removal operation.
+   - `field` is the name of the array field from which you want to remove elements.
+   - `<value-to-remove>` specifies the criteria for removing elements from the array. It can be a single value, an array of values, or an expression that matches elements to be removed.
+
+2. **Example**:
+   Suppose you have a collection of documents called "lists," and each document has an "items" field that is an array of items. You want to remove a specific item from the "items" array based on its `_id` value. Here's how you would use `$pull`:
+
+   ```javascript
+   // Example document in the "lists" collection
+   {
+     _id: ObjectId("5f8c648bfe49d81060cc70a5"),
+     name: "Grocery List",
+     items: [
+       { _id: ObjectId("5f8c648bfe49d81060cc70a6"), name: "Apples" },
+       { _id: ObjectId("5f8c648bfe49d81060cc70a7"), name: "Bananas" },
+       { _id: ObjectId("5f8c648bfe49d81060cc70a8"), name: "Oranges" }
+     ]
+   }
+
+   // Removing an item from the "items" array by its _id
+   db.lists.updateOne(
+     { _id: ObjectId("5f8c648bfe49d81060cc70a5") },
+     { $pull: { items: { _id: ObjectId("5f8c648bfe49d81060cc70a7") } } }
+   )
+   ```
+
+   In this example, the `$pull` operator is used to remove the item with the `_id` equal to "5f8c648bfe49d81060cc70a7" from the "items" array within the document.
+
+3. **Multiple Matches**:
+   `$pull` can remove multiple elements from the array if there are multiple matches. For example, if there are multiple items with the same value in the array that matches the criteria, all of them will be removed.
+
+4. **Atomic Operation**:
+   `$pull` is an atomic operation, meaning it either removes all matching elements or none at all. There is no partial update; it removes all or none.
+
+5. **Return Value**:
+   When you use `$pull` in an `update` operation, it returns the modified document as a result.
+
+6. **Nested Arrays**:
+   You can also use `$pull` to remove elements from nested arrays within a document by specifying the path to the nested array.
+
+Overall, `$pull` is a powerful operator in MongoDB that allows you to remove specific elements from arrays within documents, providing flexibility in updating and modifying your data.
