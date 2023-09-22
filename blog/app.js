@@ -1,4 +1,3 @@
-// Import required modules
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
@@ -10,7 +9,7 @@ const passportLocalMongoose = require("passport-local-mongoose");
 const User = require("./models/User"); 
 
 
-// Initialize Express app
+
 const app = express();
 
 // Set EJS as the view engine
@@ -19,7 +18,7 @@ app.set("view engine", "ejs");
 // Parse URL-encoded bodies (as sent by HTML forms)
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Serve static files from the "public" directory
+// Serve static files ie custom CSS from the "public" directory
 app.use(express.static("public"));
 
 // Configure session middleware
@@ -49,7 +48,6 @@ mongoose.connect("mongodb://127.0.0.1:27017/blogDB", {
 // Import and use your routes
 const homeRoute = require("./routes/home");
 const aboutRoute = require("./routes/about");
-const contactRoute = require("./routes/contact");
 const composeRoute = require("./routes/compose");
 const postsRoute = require("./routes/posts");
 const registerRoute = require("./routes/register");
@@ -58,7 +56,6 @@ const logoutRoute = require("./routes/logout");
 
 app.use("/", homeRoute);
 app.use("/about", aboutRoute);
-app.use("/contact", contactRoute);
 app.use("/compose", composeRoute);
 app.use("/posts", postsRoute);
 app.use("/register", registerRoute);
