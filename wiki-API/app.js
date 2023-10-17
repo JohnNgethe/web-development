@@ -35,6 +35,8 @@ const articleSchema = {
 
 const Article = mongoose.model("Article", articleSchema);
 
+// Request for all articles
+
 app.route("/articles")
   .get(async (req, res) => {
     try {
@@ -81,6 +83,48 @@ app.route("/articles")
     }
   });
 
+////requests for specific section///
+
+  app
+    .route("/articles/:articleTitle")
+
+    .get(async (req, res) => {
+      const reqTitle = req.params.articleTitle;
+      try {
+        const foundTitle = await Article.findOne({ title: reqTitle });
+
+        if (foundTitle) {
+          res.send(foundTitle);
+        } else {
+          res.send("Title not found");
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    })
+
+    // Define an API endpoint for updating an article
+    .put( async (req, res) => {
+      try {
+        const filter = { title: req.params.articleTitle };
+        const update = {
+          title: req.body.title,
+          content: req.body.content,
+        };
+
+        const result = await Article.updateOne(filter, update ,{ overwrite: true });
+
+        if (result.nModified === 0) {
+          res.status(404).send("Article not found");
+        } else {
+          res.send("Article updated successfully");
+        }
+      } catch (error) {
+        console.error(error);
+        res.status(500).send("Error updating article");
+      }
+    });
+
 
 
 let port = process.env.PORT || 3000;
@@ -88,3 +132,4 @@ let port = process.env.PORT || 3000;
 app.listen(port,()=>{
   console.log("Server started successfully on " + port);
 });
+
