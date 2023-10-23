@@ -26,9 +26,19 @@ const db = mongoose.connection;
 db.on("error", (error) => console.error("MongoDB connection error:", error));
 db.once("open", () => console.log("Connected to MongoDB successfully"));
 
+//Schema
+const userSchema = {
+  email: {
+    type: String,
+  },
+  password: {
+    type: String,
+  },
+};
+const User = new mongoose.model("user", userSchema);
 
-app.get("/", (req, res)=>{
-    res.render("home");
+app.get("/", (req, res) => {
+  res.render("home");
 });
 
 app.get("/login", (req, res) => {
@@ -41,7 +51,45 @@ app.get("/register", (req, res) => {
 
 
 
+app.post("/register", (req, res) => {
+  const newUser = new User({
+    email: req.body.username,
+    password: req.body.password,
+  });
 
+  newUser
+    .save()
+    .then(() => {
+      res.render("secrets");
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+});
+
+app.post("/login", async (req, res) => {
+  const username = req.body.username;
+  const password = req.body.password;
+
+  try {
+    const foundUser = await User.findOne({ email: username }).exec();
+
+    if (!foundUser) {
+      console.log("User not found");
+      return res.send("User not found"); 
+    }
+
+    if (foundUser.password === password) {
+      res.render("secrets");
+    } else {
+      console.log("Incorrect password");
+      res.send("Incorrect password"); 
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error"); 
+  }
+});
 
 
 
@@ -50,5 +98,3 @@ let port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server started successfully on port ${port}`);
 });
-
-
