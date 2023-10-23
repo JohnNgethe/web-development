@@ -2,6 +2,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
+const mongoose = require("mongoose");
 
 require("dotenv").config();
 
@@ -14,6 +15,16 @@ app.use(
   })
 );
 app.use(express.static("public"));
+
+//mongodb connection with mongoose
+mongoose.connect(process.env.DB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+//check mongo connection
+const db = mongoose.connection;
+db.on("error", (error) => console.error("MongoDB connection error:", error));
+db.once("open", () => console.log("Connected to MongoDB successfully"));
 
 
 app.get("/", (req, res)=>{
