@@ -3,7 +3,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
-const md5 = require("md5");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 
 require("dotenv").config();
 
@@ -52,10 +53,13 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
-app.post("/register", (req, res) => {
+app.post("/register", async (req, res) => {
+try {
+  const hash = await bcrypt.hash(req.body.password, saltRounds);
+
   const newUser = new User({
     email: req.body.username,
-    password: md5(req.body.password),
+    password: hash,
   });
 
   newUser
@@ -66,8 +70,12 @@ app.post("/register", (req, res) => {
     .catch((err) => {
       console.log(err);
     });
-});
 
+
+} catch (error) {
+  console.log(error);
+}});
+  
 app.post("/login", async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
@@ -79,8 +87,9 @@ app.post("/login", async (req, res) => {
       console.log("User not found");
       return res.send("User not found");
     }
+    const isPasswordValid = await bcrypt.compare(password, foundUser.password);
 
-    if (foundUser.password === password) {
+    if (isPasswordValid) {
       res.render("secrets");
     } else {
       console.log("Incorrect password");
