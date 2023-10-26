@@ -3,6 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
+const md5 = require("md5");
 
 require("dotenv").config();
 
@@ -24,17 +25,19 @@ mongoose.connect(process.env.DB_URI, {
 //check mongo connection
 const db = mongoose.connection;
 db.on("error", (error) => console.error("MongoDB connection error:", error));
-db.once("open", () => console.log("Connected to MongoDB successfully"));
+db.once("open", () => console.log("Connected   to MongoDB successfully"));
 
 //Schema
-const userSchema = {
+const userSchema = new mongoose.Schema({
   email: {
     type: String,
   },
   password: {
     type: String,
   },
-};
+});
+
+
 const User = new mongoose.model("user", userSchema);
 
 app.get("/", (req, res) => {
@@ -49,12 +52,10 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
-
-
 app.post("/register", (req, res) => {
   const newUser = new User({
     email: req.body.username,
-    password: req.body.password,
+    password: md5(req.body.password),
   });
 
   newUser
@@ -76,22 +77,20 @@ app.post("/login", async (req, res) => {
 
     if (!foundUser) {
       console.log("User not found");
-      return res.send("User not found"); 
+      return res.send("User not found");
     }
 
     if (foundUser.password === password) {
       res.render("secrets");
     } else {
       console.log("Incorrect password");
-      res.send("Incorrect password"); 
+      res.send("Incorrect password");
     }
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error"); 
+    res.status(500).send("Internal Server Error");
   }
 });
-
-
 
 let port = process.env.PORT || 3000;
 
